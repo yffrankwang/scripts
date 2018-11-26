@@ -1,0 +1,271 @@
+<html>
+<head>
+	<HTA:APPLICATION 
+		APPLICATIONNAME = "junction"
+		ID="oHTA"
+		SINGLEINSTANCE = "no"
+		ICON = "junction.ico" 
+		SCROLL = "no"
+		MAXIMIZEBUTTON = "no"
+		NAVIGABLE = "no"
+		SELECTION = "yes"
+		CONTEXTMENU = "yes"
+		BORDER = "thin"
+		INNERBORDER = "no"
+	/>
+	<title>junction</title>
+</head>
+
+<style>
+body {
+	background-color: buttonface;
+}
+.title {
+	font-size: 16pt; 
+	font-family: courier new; 
+	font-weight: bold;
+}
+.content {
+	font-size: 9pt; 
+	font-family: courier new; 
+}
+.edit {
+	font-size: 9pt; 
+	font-family: courier new; 
+}
+.btn {
+	font-size: 9pt; 
+	font-family: courier new; 
+}
+.msg {
+	width: 600px;
+	height: 190px;
+	font-size: 9pt; 
+	font-family: courier new; 
+	border: solid 1px buttonface;
+	background-color: buttonface;
+	overflow-x: hidden; 
+	overflow-y: auto; 
+}
+</style>
+
+<script language="JavaScript">
+if (typeof String.prototype.trim == "undefined") {
+	String.prototype.trim = function() { 
+		return this.replace(/^[\s\u3000]+|[\s\u3000]+$/g, ""); 
+	} 
+}
+</script>
+
+<body onload="docOnLoad()">
+
+<span class="title">Junction</span><br>
+<hr>
+<table border="0" cellspacing="0" cellpadding="3" class="content">
+<tr>
+	<td>Target directory:</td>
+	<td><input type="text" id="oTarget" size="60" class="edit" maxlenth="2048" onblur="this.value=this.value.trim()"></td>
+	<td><input type="button" class="btn" value="..." onclick="selectTarget()"></td>
+</tr>
+<tr>
+	<td>Junction directory:</td>
+	<td><input type="text" id="oJunction" size="60" class="edit" maxlenth="2048" onblur="this.value=this.value.trim()"></td>
+	<td><input type="button" class="btn" value="..." onclick="selectJunction()"></td>
+</tr>
+<tr>
+	<td colspan="3" height="5"></td>
+</tr>
+<tr>
+	<td colspan="3" align="center"><input type="submit" class="btn" value="Junction" onclick="junction()"></td>
+</tr>
+<tr>
+	<td colspan="3" height="5"></td>
+</tr>
+<tr>
+	<td colspan="3"><textarea id="msg" class="msg" readonly></textarea></td>
+</tr>
+</table>
+
+<script language="JavaScript">
+function docOnLoad() {
+	window.resizeTo(640, 400);
+	document.getElementById("oTarget").focus();
+
+	var cmdline = oHTA.commandLine;
+	var args = getCmdlineArgs(cmdline);
+	if (args.length > 1) {
+		document.getElementById("oTarget").value = args[1];
+		document.getElementById("oJunction").focus();
+	}
+	
+	if (args.length > 2) {
+		document.getElementById("oJunction").value = args[2];
+	}
+	
+}
+
+function getCmdlineArgs(cmdline) {
+	cmdline = cmdline.trim();
+	
+	var args = new Array();
+	
+	var s;
+	var j = 0;
+	var sq = false;
+	for (var i = 0; i < cmdline.length; i++) {
+		var c = cmdline.charAt(i);
+		switch (c) {
+		case '"':
+			if (sq) {
+				sq = false;
+				if (j < i) {
+					s = cmdline.substring(j, i).trim();
+					if (s.length > 0) {
+						args[args.length] = s;
+					}
+				}
+				j = i + 1;
+			}
+			else {
+				sq = true;
+				if (j < i) {
+					s = cmdline.substring(j, i).trim();
+					if (s.length > 0) {
+						args[args.length] = s;
+					}
+				}
+				j = i + 1;
+			}
+			break;
+		case ' ':
+			if (!sq) {
+				if (j < i) {
+					s = cmdline.substring(j, i).trim();
+					if (s.length > 0) {
+						args[args.length] = s;
+					}
+				}
+			}
+			break;
+		}
+	}
+	
+	if (j < i) {
+		s = cmdline.substring(j, i).trim();
+		if (s.length > 0) {
+			args[args.length] = s;
+		}
+	}
+
+	return args;
+}
+
+var fso = new ActiveXObject("Scripting.FileSystemObject");
+var cDialog = new ActiveXObject("UserAccounts.CommonDialog");
+var wShell = new ActiveXObject("WScript.Shell");
+var aShell = new ActiveXObject("Shell.Application");
+
+function selectTarget() {
+	var oFolder = aShell.BrowseForFolder(0, "Select Target Folder", 0x71);
+	if (oFolder) {
+		document.getElementById("oTarget").value = oFolder.Items().Item().Path;
+	}
+}
+
+function selectJunction() {
+	cDialog.Filter = "All Files (*.*)|*.*";
+	if (cDialog.ShowOpen() != 0) {
+		var dir = cDialog.FileName;
+		document.getElementById("oJunction").value = dir;
+	}
+}
+
+function filter(s) {
+	return s;
+}
+
+function error(es) {
+	var msg = document.getElementById("msg");
+	
+	msg.value = filter(es);
+	msg.style.color = "red";
+}
+
+function message(ms) {
+	var msg = document.getElementById("msg");
+	
+	msg.value = filter(ms);
+	msg.style.color = "";
+}
+
+function appendmsg(ms) {
+	var msg = document.getElementById("msg");
+	
+	msg.value += filter(ms);
+}
+
+function junction() {
+	message("");
+
+	var sTarget = document.getElementById("oTarget").value;
+	var sJunction = document.getElementById("oJunction").value;
+
+	if (sTarget.match(/[*?\"<>|]/g)) {
+		error("Target directory name cannot contain any of the following characters: \n"
+			+ "    *?\"<>|");
+		return;
+	}
+	
+	if (sJunction.match(/[\*?\"<>|]/g)) {
+		error("Junction directory name cannot contain any of the following characters: \n"
+			+ "    *?\"<>|");
+		return;
+	}
+	
+	if (sTarget.length < 1) {
+		error("Please input the target directory!");
+		return;
+	}
+
+	if (sJunction.length < 1) {
+		error("Please input the junction directory!");
+		return;
+	}
+
+	if (!fso.FolderExists(sTarget)) {
+		error("Target directory [" + sTarget + "] dos not exists!");
+		return;
+	}
+
+	message("Create junction [" + sJunction + "] --> [" + sTarget + "] ... ");
+
+	if (sJunction.indexOf(" ") >= 0) {
+		sJunction = "\"" + sJunction + "\"";
+	}
+	if (sTarget.indexOf(" ") >= 0) {
+		sTarget = "\"" + sTarget + "\"";
+	}
+	
+	
+	var oExec = wShell.Exec("junction.exe " + sJunction + " " + sTarget);
+	
+	while (oExec.Status == 0) {
+		;
+	}
+
+	appendmsg(oExec.ExitCode == 0 ? "OK!" : "FAILED!");
+	appendmsg("\n");
+
+	while (!oExec.StdOut.AtEndOfStream) {
+		appendmsg(oExec.StdOut.ReadLine());
+		appendmsg("\n");
+	}
+
+	if (oExec.ExitCode != 0) {
+		document.getElementById("msg").style.color = "red";
+	}
+}
+</script>
+
+</body>
+</html>

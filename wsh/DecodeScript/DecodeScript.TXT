@@ -1,0 +1,126 @@
+DecodeScript.JS V1.01 (C) yoshioka.teruo@nifty.com 2005-07-09
+
+スクリプトエンコードされたスクリプトをデコードするJScript
+
+1. 目的、用途
+
+スクリプトエンコードされたスクリプトをデコードします。
+
+2. 使用方法
+
+(1) DecodeScript.JS
+
+※この方法はScriptControlを使います。
+
+.VBEや.JSEはそのままで可。
+その他の.HTMなどは、スクリプトだけを切り出して、ファイルを作成します。
+ファイルの拡張子は、JScriptだけは.JSEに。他は任意。
+
+#@~^～～～～
+～～～～～～
+～～～==^#~@
+
+スクリプトファイルをアイコンにドロップします。
+あるいは、ファイルを指定して起動します。
+
+  Start DecodeScript.JS hoge.ext
+
+hoge.extをドロップすると、デコード結果がhoge.ext.txtに入ります。
+メッセージボックスにも表示されます。
+
+デコード結果は、
+
+function main(){/* 
+
+デコードされたスクリプト
+デコードされたスクリプト
+デコードされたスクリプト
+
+*/}
+
+のようになっています。(JScriptは、/* */なし。VBScriptは、/* */あり。)
+前後の不要な部分は手作業にて削除してください。:-p
+
+テスト用サンプル
+  ARGS.VBE
+  ARGS.JSE
+
+(2) 別の方法（使うのはメモ帳だけ）
+
+※この方法はScriptControlを使いません。
+
+以下の.JSEファイルを作ります。
+――――――――――――――――――――――――――――――――――――――
+function main(){/*
+
+#@~^～～～～　ここにエンコードされたスクリプト(.VBEでも.JSEでも)を置く。
+～～～～～～　　.VBEの場合、前後の/* */を付けます。
+～～～==^#~@  　.JSEの場合、前後の/* */を外します。
+
+*/}
+WScript.Echo(main);
+――――――――――――――――――――――――――――――――――――――
+ファイル名をhoge.JSEとして実行します。
+
+CScript.EXE hoge.JSE > ファイル
+
+出力は上と同様です。
+
+テスト用サンプル
+  hogeVBE.jse
+  hogeJSE.jse
+
+(3) 更に他の方法
+
+スクリプトエラーが発生したときに、スクリプトデバッガーを開くと
+デコードされたスクリプトソースが見えます。
+スクリプトエラーに関係なく、スクリプトデバッガーを開く方法が
+あればよいのでしょうが、その手順は不明と言うか、知りません。
+
+3. 補足
+
+(1) WSH
+WSH2.0以降が必要です。
+Windows 98/SE	WSH1.0	※更新が必要
+Windows ME	WSH2.0
+Windows 2000	WSH2.0
+Windows XP	WSH5.6
+
+(2) 動作確認
+WindowsXP SP2(WSH5.6/IE6.0)で確認しています。
+WindowsME/2000でも動くように作ってますが、確認できません。
+Windows98はScriptControlがあれば動くと思いますが、確認できません。
+ScriptControlを使わない方法は、.JSEが動く環境(WSH2.0以降)であれば動きます。
+
+(3) MS Script Control
+Windows ME/2000/XP、Office2000/XP、VB5/6などに含まれます。
+
+ファイル名はMSSCRIPT.OCXです。C:\Windows\System32などにあります。
+もし、なければMSからDownLoadできます。
+
+ProgIDは一般に"ScriptControl"ですが、"MSScriptControl.ScriptControl"など
+のこともあるようです。もし、エラーになったら、変えてみてください。
+Set SC=CreateObject("ScriptControl")
+Set SC=CreateObject("MSScriptControl.ScriptControl")
+Set SC=CreateObject("MSScriptControl.ScriptControl.1")
+
+MSSCRIPT.OCXはあるのに、ProgIDが登録されていない場合、以下で登録できます。
+REGSVR32.EXE MSSCRIPT.OCX
+
+4. 履歴
+
+1.00 2005-07-06 初版作成。
+1.01 2005-07-09 /* */コメントがエラー。.JSE/.VBE別に処理。
+
+5. その他
+
+【ソフト名】　DecodeScript.JS V1.01
+【登録名】　DecodeScript.ZIP
+【著作権者】　吉岡  照雄 ( yoshioka.teruo@nifty.com )
+【対応機種】　Windows ME/2000/XP
+【必要ソフト】　なし
+【開発言語】　Microsoft VBScript
+【ソフト種別】　フリーソフトウェア
+【転載条件】　なし
+
+以上
