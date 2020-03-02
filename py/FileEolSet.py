@@ -12,6 +12,10 @@ if sys.version_info >= (3, 0):
 	def raw_input(s):
 		return input(s)
 
+EOL_LF   = 0x0001
+EOL_CR   = 0x0002
+EOL_CRLF = 0x0004
+
 class FileEolSet:
 	def __init__(self):
 		# ----------------------------
@@ -19,8 +23,8 @@ class FileEolSet:
 		# ----------------------------
 		self.files = []
 		self.srcdir = '.'
-		self.eola = "LF"
-		self.eol = "\n"
+		self.eola = EOL_LF
+		self.eols = "\n"
 		self.recu = False
 		self.execu = False
 		self.quiet = False
@@ -58,13 +62,15 @@ class FileEolSet:
 					self.srcdir = arg
 				elif opt in ("--eol", "-l"):
 					a = arg.upper()
-					self.eola = a
 					if a == 'CR':
-						self.eol = "\r"
+						self.eols = "\r"
+						self.eola = EOL_CR
 					elif a == 'LF':
-						self.eol = "\n"
+						self.eols = "\n"
+						self.eola = EOL_LF
 					elif a == 'CRLF':
-						self.eol = "\r\n"
+						self.eols = "\r\n"
+						self.eola = EOL_CRLF
 					else:
 						self.showUsage("Invalid argument: " + opt)
 				elif opt in ("--dir", "-d"):
@@ -84,9 +90,17 @@ class FileEolSet:
 		if not self.files:
 			self.files = [ '*' ]
 
+	def eol(self, eola):
+		if eola == EOL_CR:
+			return 'CR'
+		if eola == EOL_LF:
+			return 'LF'
+		if eola == EOL_CRLF:
+			return 'CRLF'
+		return 'MIXED'
 
 	def run(self):
-		print('FileEolSet %s/%s (%s)' % (self.srcdir, self.files, self.eola))
+		print('FileEolSet %s/%s (%s)' % (self.srcdir, self.files, self.eol(self.eola)))
 		if self.execu:
 			self.process(self.srcdir)
 			return
@@ -124,7 +138,7 @@ class FileEolSet:
 		sf = os.path.join(srcdir, sfn)
 		
 		sz = os.path.getsize(sf)
-		if sz > 1024 * 1024 * 10:
+		if sz > 1024 * 1024 * 20:
 			print('[FAILED] %s: file size %d is too big.' % (sf, sz))
 			return False
 
@@ -136,23 +150,24 @@ class FileEolSet:
 			sd = f.read()
 		
 		sz = len(sd)
-		oeol = None
-		for i in xrange(0, sz):
+		oeol = 0
+		i = 0
+		while i < sz:
 			c = sd[i]
 			if c == "\r":
 				if i < sz - 1 and sd[i + 1] == "\n":
-					oeol = "CRLF"
+					i += 1
+					oeol |= EOL_CRLF
 				else:
-					oeol = "CR"
-				break;
+					oeol |= EOL_CR
 			elif c == "\n":
-				oeol = "LF"
-				break;
-		
-		if oeol is None or oeol == self.eola:
+				oeol |= EOL_LF
+			i += 1
+
+		if oeol == 0 or oeol == self.eola:
 			return False
 
-		sys.stdout.write('[EOLSET] %s: %s -> %s ... ' % (sf, oeol, self.eola))
+		sys.stdout.write('[EOLSET] %s: %s -> %s ... ' % (sf, self.eol(oeol), self.eol(self.eola)))
 		msg = '?'
 		if self.execu:
 			nsd = ''
@@ -161,11 +176,11 @@ class FileEolSet:
 				c = sd[i]
 				i += 1
 				if c == "\r":
-					nsd += self.eol
+					nsd += self.eols
 					if i < sz and sd[i] == "\n":
 						i = i + 1
 				elif c == "\n":
-					nsd += self.eol
+					nsd += self.eols
 				else:
 					nsd += c
 	
