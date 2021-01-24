@@ -26,7 +26,7 @@ class EncodingConverter:
 	def showUsage(self, err=None, exitCode=2):
 		if err:
 			print("Error: " + err)
-			print()
+			print("")
 		print("FileEncode.py [Options] file1 file2 ...")
 		print("Options (takes an parameter):")
 		print(" -s, --srcdir    Source Directory (default: %s)" % self.srcdir )
@@ -37,7 +37,7 @@ class EncodingConverter:
 		print("Flags (no parameter):")
 		print(" -r, --recu      Recursively erase files in subdirectores")
 		print(" -t, --test      Test only (do not erase the file)")
-		print()
+		print("")
 		
 		if exitCode > 0:
 			sys.exit(exitCode)
