@@ -15,3 +15,12 @@ echo HHMMSS: %HMS%
 
 set YMD_HMS=%YMD%_%HMS%
 echo YYYYMMDD_HHMMSS: %YMD_HMS%
+
+
+REM set stdout to var
+application arg0 arg1 > temp.txt
+set /p VAR=<temp.txt
+
+
+REM set stdout to var
+for /f %%i in ('application arg0 arg1') do set VAR=%%i
