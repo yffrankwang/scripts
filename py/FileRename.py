@@ -13,6 +13,7 @@ if sys.version_info >= (3, 0):
 	def raw_input(s):
 		return input(s)
 
+
 class FileRenamer:
 	def __init__(self):
 		# ----------------------------
@@ -30,6 +31,12 @@ class FileRenamer:
 		self.recu = False
 		self.execu = False
 		self.quiet = False
+		self.verbose = False
+
+
+	def debug(self, s):
+		if self.verbose:
+			print(s)
 
 
 	def showUsage(self, err = None, exitCode = 2):
@@ -56,6 +63,7 @@ class FileRenamer:
 		print(" -r, --recu      Recursively rename files in subdirectores")
 		print(" -e, --exec      Execute file rename process without prompt")
 		print(" -q, --quiet     Do not show prompt")
+		print(" -v, --verbose   Print detail log")
 		print("")
 		
 		if exitCode > 0:
@@ -63,8 +71,8 @@ class FileRenamer:
 
 	def getArgs(self, args):
 		try:
-			opts, args = getopt.getopt(args, "h?s:t:x:i:p:P:T:dreq", 
-				[ "help", "src=", "text=", "regex=", "index=", "repl=", "pattern=", "timefmt=", "dir", "recu", "exec", "quiet" ]
+			opts, args = getopt.getopt(args, "h?s:t:x:i:p:P:T:dreqv", 
+				[ "help", "src=", "text=", "regex=", "index=", "repl=", "pattern=", "timefmt=", "dir", "recu", "exec", "quiet", "verbose" ]
 				)
 	
 			for opt, arg in opts:
@@ -92,6 +100,8 @@ class FileRenamer:
 					self.execu = True
 				elif opt in ("--quiet", "-q"):
 					self.quiet = True
+				elif opt in ("--verbose", "-v"):
+					self.verbose = True
 				else:
 					self.showUsage("Invalid argument: " + opt)
 		except getopt.GetoptError as e:
@@ -122,23 +132,29 @@ class FileRenamer:
 
 	def process(self, srcdir):
 		if not os.access(srcdir, os.W_OK):
+			print('Access denied: %s' % (self.srcdir))
 			return 0
 		
 		n = 0
 		for fn in os.listdir(srcdir):
+			self.debug('Found: %s' % (fn))
+
 			ren = False
-			if os.path.isdir(os.path.join(srcdir, fn)):
+			ap = os.path.join(srcdir, fn)
+			if os.path.isdir(ap):
+				self.debug('isdir: %s' % (ap))
 				if fn[0] == '.':
+					self.debug('Continue: %s' % (fn))
 					continue
 				if self.recu:
-					nsrc = os.path.join(srcdir, fn)
-					n += self.process(nsrc)
+					n += self.process(ap)
 				ren = self.dir
 			else:
 				ren = not self.dir
 
 			if ren:
 				for p in self.files:
+					self.debug('fnmatch: %s, %s' % (fn, p))
 					if fnmatch.fnmatch(fn, p):
 						if self.rename(srcdir, fn):
 							n += 1

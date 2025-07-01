@@ -70,7 +70,7 @@ class EncodingConverter:
 			self.showUsage(str(e))
 
 		if not self.srcenc:
-			self.showUsage();
+			self.showUsage()
 
 		if not self.outdir:
 			self.outdir = self.srcdir
